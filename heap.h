@@ -1,9 +1,12 @@
 #ifndef HEAP_H
 #define HEAP_H
 
+#include "box.h"
+
 typedef struct {
-    int chave;
-    int ativo; // 1: ativo (pode ser usado na run atual), 0: congelado (para próxima run)
+    TRegistro reg;
+    int ativo;       // 1 = ativo na run atual, 0 = congelado (seleção por substituição)
+    int fitaOrigem;  // Índice da fita de onde o registro foi lido (usado na intercalação)
 } HeapItem;
 
 typedef struct {
@@ -12,13 +15,10 @@ typedef struct {
     int capacidade;
 } FilaPrioridade;
 
-//Funções
-FilaPrioridade *criarFila(int capacidade);
-void trocar(int *a, int *b);
-void heapifyUp(FilaPrioridade *fila, int indice);
-void heapifyDown(FilaPrioridade *fila, int indice);
-void inserir(FilaPrioridade *fila, int item);
-int removerMenor(FilaPrioridade *fila);
-void processarItens(int *entrada, int n, int m);
+FilaPrioridade* criarFila(int capacidade);
+void destruirFila(FilaPrioridade *fila);
+void inserirHeap(FilaPrioridade *fila, TRegistro reg, int ativo, int fitaOrigem, TMetricas *m);
+HeapItem removerMinimoHeap(FilaPrioridade *fila, TMetricas *m);
+void reconstruirHeap(FilaPrioridade *fila, TMetricas *m);
 
-#endif HEAP_H
+#endif

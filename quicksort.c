@@ -1,220 +1,252 @@
-#include <stdio.h>
-#include <stdlib.h> 
-#include <limits.h>
-#include <stdbool.h>
-#include "box.c"
+#include "quicksort.h"
 
-#define TAM 10 // Tamanho da memória interna disponível
-
-FILE *ArqLE; // Arquivo de Leitura Superior e Escrita Superior
-FILE *ArqLi; // Arquivo de Leitura Inferior
-FILE *ArqEi; // Arquivo de Escrita Inferior
-
-// Cria um registro (aluno)
-TRegistro aluno;
-
-// Estrutura do pivõ
 typedef struct {
-  TRegistro pivo[TAM];
-  int num_cel_ocupadas;
-  
+    TRegistro Item;
+    int Ant;
+    int Prox;
+} TCelulaPivo;
+
+typedef struct {
+    TCelulaPivo Itens[TAM_PIVO];
+    int Primeiro;
+    int Ultimo;
+    int CelulasDisp;
+    int num_cel_ocupadas;
 } TPivo;
 
-// Inicialização do pivô
-void InicializaPivo(TPivo *pivo) {
+static void inicializaPivo(TPivo *pivo) {
     pivo->num_cel_ocupadas = 0;
+    pivo->Primeiro = -1;
+    pivo->Ultimo = -1;
+    pivo->CelulasDisp = 0;
+    for (int i = 0; i < TAM_PIVO; i++) {
+        pivo->Itens[i].Ant = -1;
+        pivo->Itens[i].Prox = (i == TAM_PIVO - 1) ? -1 : i + 1;
+    }
 }
 
-// Leitura na parte superior do arquivo
-void LeSup(FILE **ArqLE, TRegistro *ult_lido, int *Ls, short *onde_ler) {
-  fseek(*ArqLE, (*Ls - 1) * sizeof (TRegistro), SEEK_SET);
-  fread (ult_lido, sizeof(TRegistro), 1, *ArqLE);
-  (*Ls)--;  
-  *onde_ler = false;
-}
+static void insereItemPivo(TRegistro Item, TPivo *pivo, TMetricas *m) {
+    if (pivo->num_cel_ocupadas == TAM_PIVO) return;
 
-// Leitura na parte inferior do arquivo
-void LeInf(FILE **ArqLi, TRegistro *ult_lido, int *Li, short *onde_ler) { 
-  fread(ult_lido, sizeof (TRegistro), 1, *ArqLi);
-  (*Li)++; 
-  *onde_ler = true;
-}
-
-// Inserção de um elemento no pivo
-void InserePivo(TPivo *pivo, TRegistro *ult_lido) {
-    // Insere ult_lido de forma ordenada no pivo
-    InsereItem (*ult_lido, pivo); 
+    int disp = pivo->CelulasDisp;
+    pivo->CelulasDisp = pivo->Itens[disp].Prox;
+    pivo->Itens[disp].Item = Item;
     pivo->num_cel_ocupadas++;
-}
 
-// Escrita de um elemento na parte superior do arquivo
-void EscreveMax(FILE **ArqLE, TRegistro R, int *Es)
-{
-  fseek(*ArqLE, (*Es-1) *sizeof(TRegistro), SEEK_SET);
-  fwrite(&R, sizeof(TRegistro), 1, *ArqLE); (*Es)--;
-}
-
-// Escrita de um elemento na parte inferior do arquivo
-void EscreveMin (FILE **ArqEi, TRegistro R, int *Ei) { 
-    fwrite (&R, sizeof (TRegistro), 1, *ArqEi); (*Ei)++; 
-}
-
-void RetiraMax(TPivo *pivo, TRegistro *R, int *cel_ocupadas)
-{ 
-    RetiraUltimo(pivo, R); 
-    *cel_ocupadas = pivo->num_cel_ocupadas; 
-}
-
-void RetiraMin (TPivo *pivo, TRegistro *R, int *cel_ocupadas)
-{ 
-    RetiraPrimeiro(pivo, R); 
-    *cel_ocupadas = pivo->num_cel_ocupadas;
-}
-
-// Partição do arquivo
-void Particao(FILE **ArqLi, FILE **ArqEi, FILE **ArqLE, TPivo pivo, int esq, int dir, int *i, int *j) {
-    int Ls = dir, Es = dir, Li = esq, Ei = esq, // começa com os ponteiros de leitura e escrita no início e no final do arquivo
-        Linf = INT_MIN, Lsup = INT_MAX; // inicializa os limites inferior e superior do pivô
-    short onde_ler = true; // controla se o registro é lido da parte inferior ('false') ou superior ('true') do arquivo
-    TRegistro ult_lido, R; // registros auxiliares
-    
-    int cel_ocupadas = pivo.num_cel_ocupadas; // ALTERAR 
-
-    // Posiciona os ponteiros de leitura e escrita
-    fseek(*ArqLi, (Li - 1) * sizeof(TRegistro), SEEK_SET);
-    fseek(*ArqEi, (Ei - 1) * sizeof(TRegistro), SEEK_SET);
-
-    // Inicializa os valores de i e j, que indicam os limites dos subarquivos
-    *i = esq - 1;
-    *j = dir + 1;
-
-    // Faz partições enquanto Ls e Li não se cruzam
-    while(Ls >= Li) {
-        // Há espaço no pivô
-            if(pivo.num_cel_ocupadas < TAM - 1) {
-                // lê o próximo registro do arquivo
-                if(onde_ler)
-                    LeSup(ArqLE, &ult_lido, &Ls, &onde_ler);
-                else
-                    LeInf(ArqLi, &ult_lido, &Li, &onde_ler);
-                // insere o registro lido no pivô
-                InserePivo(&pivo, &ult_lido);
-                continue;
-            }
-        // Pivô está cheio
-            // Quebra da alternancia de leitura, caso os ponteiros de leitura e escrita se encontrem
-            if (Ls == Es)
-                LeSup(ArqLE, &ult_lido, &Ls, &onde_ler);
-            else if (Li == Ei)
-                LeInf(ArqLi, &ult_lido, &Li, &onde_ler);
-            // Leitura normal, seguindo a alternância
-            else if (onde_ler)
-                LeSup(ArqLE, &ult_lido, &Ls, &onde_ler);
-            else
-                LeInf(ArqLi, &ult_lido, &Li, &onde_ler);
-            // Escreve elementos nos subarquivos
-            if (ult_lido.nota >= Lsup) {
-                *j = Es;
-                EscreveMax(ArqLE, ult_lido, &Es);
-                continue;
-            }
-            if (ult_lido.nota < Linf) {
-                *i = Ei;
-                EscreveMin(ArqEi, ult_lido, &Ei);
-                continue;
-            }
-
-            InserePivo(&pivo, &ult_lido);
-
-            if (Ei - esq < dir - Es) {
-                RetiraMin(&pivo, &R, &cel_ocupadas);
-                EscreveMin(ArqEi, R, &Ei);
-                Linf = R.nota;
-            } else {
-                RetiraMax(&pivo, &R, &cel_ocupadas);
-                EscreveMax(ArqLE, R, &Es);
-                Lsup = R.nota;
-            }
+    if (pivo->num_cel_ocupadas == 1) {
+        pivo->Primeiro = disp;
+        pivo->Ultimo = disp;
+        pivo->Itens[disp].Prox = -1;
+        pivo->Itens[disp].Ant = -1;
+        return;
     }
-    
-    while (Ei <= Es) {
-        RetiraMin(&pivo, &R, &cel_ocupadas);
-        EscreveMin(ArqEi, R, &Ei);
+
+    int pos = pivo->Primeiro;
+    m->comparacoes++;
+    if (Item.nota < pivo->Itens[pos].Item.nota) {
+        pivo->Itens[disp].Ant = -1;
+        pivo->Itens[disp].Prox = pos;
+        pivo->Itens[pos].Ant = disp;
+        pivo->Primeiro = disp;
+        return;
     }
+
+    int indiceInsercao = pivo->Itens[pos].Prox;
+    while (indiceInsercao != -1) {
+        m->comparacoes++;
+        if (pivo->Itens[indiceInsercao].Item.nota < Item.nota) {
+            pos = indiceInsercao;
+            indiceInsercao = pivo->Itens[pos].Prox;
+        } else {
+            break;
+        }
+    }
+
+    if (indiceInsercao == -1) {
+        pivo->Itens[disp].Ant = pos;
+        pivo->Itens[disp].Prox = -1;
+        pivo->Itens[pos].Prox = disp;
+        pivo->Ultimo = disp;
+        return;
+    }
+
+    pivo->Itens[disp].Ant = pos;
+    pivo->Itens[disp].Prox = indiceInsercao;
+    pivo->Itens[pos].Prox = disp;
+    pivo->Itens[indiceInsercao].Ant = disp;
 }
 
-// Ordenação externa pelo método QuickSort
-void QuicksortExterno (FILE **ArqLi, FILE **ArqEi, FILE **ArqLE, int esq, int dir) { 
-    int i, j; // variáveis auxiliares
-  
-    // Cria e inicializa o pivô
+static void retiraPrimeiroPivo(TPivo *pivo, TRegistro *Item) {
+    if (pivo->num_cel_ocupadas == 0) return;
+
+    int prim = pivo->Primeiro;
+    *Item = pivo->Itens[prim].Item;
+    int proxTmp = pivo->Itens[prim].Prox;
+
+    pivo->Itens[prim].Prox = pivo->CelulasDisp;
+    pivo->CelulasDisp = prim;
+    pivo->Primeiro = proxTmp;
+
+    if (pivo->Primeiro != -1) {
+        pivo->Itens[pivo->Primeiro].Ant = -1;
+    } else {
+        pivo->Ultimo = -1;
+    }
+    pivo->num_cel_ocupadas--;
+}
+
+static void retiraUltimoPivo(TPivo *pivo, TRegistro *Item) {
+    if (pivo->num_cel_ocupadas == 0) return;
+
+    int ult = pivo->Ultimo;
+    *Item = pivo->Itens[ult].Item;
+    int antTmp = pivo->Itens[ult].Ant;
+
+    pivo->Itens[ult].Prox = pivo->CelulasDisp;
+    pivo->CelulasDisp = ult;
+    pivo->Ultimo = antTmp;
+
+    if (pivo->Ultimo != -1) {
+        pivo->Itens[pivo->Ultimo].Prox = -1;
+    } else {
+        pivo->Primeiro = -1;
+    }
+    pivo->num_cel_ocupadas--;
+}
+
+static void leSup(FILE *ArqLEs, TRegistro *UltLido, int *Ls, bool *OndeLer, TMetricas *m) {
+    fseek(ArqLEs, (long)(*Ls - 1) * sizeof(TRegistro), SEEK_SET);
+    fread(UltLido, sizeof(TRegistro), 1, ArqLEs);
+    m->leituras++;
+    (*Ls)--;
+    *OndeLer = false;
+}
+
+static void leInf(FILE *ArqLi, TRegistro *UltLido, int *Li, bool *OndeLer, TMetricas *m) {
+    fread(UltLido, sizeof(TRegistro), 1, ArqLi);
+    m->leituras++;
+    (*Li)++;
+    *OndeLer = true;
+}
+
+static void escreveMax(FILE *ArqLEs, TRegistro R, int *Es, TMetricas *m) {
+    fseek(ArqLEs, (long)(*Es - 1) * sizeof(TRegistro), SEEK_SET);
+    fwrite(&R, sizeof(TRegistro), 1, ArqLEs);
+    m->escritas++;
+    (*Es)--;
+}
+
+static void escreveMin(FILE *ArqEi, TRegistro R, int *Ei, TMetricas *m) {
+    fwrite(&R, sizeof(TRegistro), 1, ArqEi);
+    m->escritas++;
+    (*Ei)++;
+}
+
+static void particao(FILE *ArqLi, FILE *ArqEi, FILE *ArqLEs, int Esq, int Dir, int *i, int *j, TMetricas *m) {
+    int Ls = Dir, Es = Dir;
+    int Li = Esq, Ei = Esq;
+    float Linf = -1.0f;
+    float Lsup = 101.0f;
+    bool OndeLer = true;
+    TRegistro UltLido, R;
     TPivo pivo;
-    InicializaPivo(&pivo);
 
-    // Condição de parada da recursão
-    if (dir - esq < 1) return;
+    inicializaPivo(&pivo);
 
-    // Realiza a partição do pivo
-    Particao(ArqLi, ArqEi, ArqLE, pivo, esq, dir, &i, &j);
+    fseek(ArqLi, (long)(Li - 1) * sizeof(TRegistro), SEEK_SET);
+    fseek(ArqEi, (long)(Ei - 1) * sizeof(TRegistro), SEEK_SET);
 
-    // Ordena primeiro o subarquivo menor
-    if (i - esq < dir - j) { // subarquivo da esquerda é menor
-        QuicksortExterno (ArqLi, ArqEi, ArqLE, esq, i);
-        QuicksortExterno (ArqLi, ArqEi, ArqLE, j, dir);
+    *i = Esq - 1;
+    *j = Dir + 1;
+
+    while (Ls >= Li) {
+        if (pivo.num_cel_ocupadas < TAM_PIVO) {
+            if (OndeLer)
+                leSup(ArqLEs, &UltLido, &Ls, &OndeLer, m);
+            else
+                leInf(ArqLi, &UltLido, &Li, &OndeLer, m);
+
+            insereItemPivo(UltLido, &pivo, m);
+            continue;
+        }
+
+        if (Ls == Es)
+            leSup(ArqLEs, &UltLido, &Ls, &OndeLer, m);
+        else if (Li == Ei)
+            leInf(ArqLi, &UltLido, &Li, &OndeLer, m);
+        else if (OndeLer)
+            leSup(ArqLEs, &UltLido, &Ls, &OndeLer, m);
+        else
+            leInf(ArqLi, &UltLido, &Li, &OndeLer, m);
+
+        m->comparacoes++;
+        if (UltLido.nota > Lsup) {
+            *j = Es;
+            escreveMax(ArqLEs, UltLido, &Es, m);
+            continue;
+        }
+
+        m->comparacoes++;
+        if (UltLido.nota < Linf) {
+            *i = Ei;
+            escreveMin(ArqEi, UltLido, &Ei, m);
+            continue;
+        }
+
+        insereItemPivo(UltLido, &pivo, m);
+
+        if (Ei - Esq < Dir - Es) {
+            retiraPrimeiroPivo(&pivo, &R);
+            escreveMin(ArqEi, R, &Ei, m);
+            Linf = R.nota;
+        } else {
+            retiraUltimoPivo(&pivo, &R);
+            escreveMax(ArqLEs, R, &Es, m);
+            Lsup = R.nota;
+        }
     }
-    else { // subarquivo da direita é menor
-        QuicksortExterno (ArqLi, ArqEi, ArqLE, j, dir);
-        QuicksortExterno (ArqLi, ArqEi, ArqLE, esq, i);
+
+    while (Ei <= Es) {
+        retiraPrimeiroPivo(&pivo, &R);
+        escreveMin(ArqEi, R, &Ei, m);
     }
 }
 
-// Função principal
-int main(int argc, char *argv[]) {
-    
-    ArqLi = fopen("teste.dat", "wb");
-        if (ArqLi == NULL) {
-            printf("Arquivo nao pode ser aberto\n");
-            exit(1);
-        }
+static void quicksortRec(FILE *ArqLi, FILE *ArqEi, FILE *ArqLEs, int Esq, int Dir, TMetricas *m) {
+    if (Dir - Esq < 1) return;
 
-    aluno.nota = 5; fwrite(&aluno, sizeof (TRegistro), 1, ArqLi);
-    aluno.nota = 3; fwrite(&aluno, sizeof (TRegistro), 1, ArqLi);
-    aluno.nota = 10;fwrite(&aluno, sizeof (TRegistro), 1, ArqLi);
-    aluno.nota = 6; fwrite(&aluno, sizeof (TRegistro), 1, ArqLi);
-    aluno.nota = 1; fwrite(&aluno, sizeof (TRegistro), 1, ArqLi);
-    aluno.nota = 7; fwrite(&aluno, sizeof (TRegistro), 1, ArqLi);
-    aluno.nota = 4; fwrite(&aluno, sizeof (TRegistro), 1, ArqLi);
+    int i, j;
+    particao(ArqLi, ArqEi, ArqLEs, Esq, Dir, &i, &j, m);
+
+    if (i - Esq < Dir - j) {
+        quicksortRec(ArqLi, ArqEi, ArqLEs, Esq, i, m);
+        quicksortRec(ArqLi, ArqEi, ArqLEs, j, Dir, m);
+    } else {
+        quicksortRec(ArqLi, ArqEi, ArqLEs, j, Dir, m);
+        quicksortRec(ArqLi, ArqEi, ArqLEs, Esq, i, m);
+    }
+}
+
+void executarQuicksortExterno(const char *nomeArquivoBin, int n, TMetricas *metricas) {
+    FILE *ArqLi = fopen(nomeArquivoBin, "r+b");
+    FILE *ArqEi = fopen(nomeArquivoBin, "r+b");
+    FILE *ArqLEs = fopen(nomeArquivoBin, "r+b");
+
+    if (!ArqLi || !ArqEi || !ArqLEs) {
+        perror("Erro ao abrir arquivo para Quicksort Externo");
+        if (ArqLi) fclose(ArqLi);
+        if (ArqEi) fclose(ArqEi);
+        if (ArqLEs) fclose(ArqLEs);
+        return;
+    }
+
+    quicksortRec(ArqLi, ArqEi, ArqLEs, 1, n, metricas);
+
+    fflush(ArqLi);
+    fflush(ArqEi);
+    fflush(ArqLEs);
 
     fclose(ArqLi);
-    
-    ArqLi = fopen("teste.dat", "r+b");
-        if (ArqLi == NULL) {
-            printf("Arquivo não pode ser aberto!\n");
-            exit(1);
-        }
-        ArqEi = fopen("teste.dat", "r+b");
-        if (ArqEi == NULL) {
-            printf("Arquivo nao pode ser aberto\n");
-            exit(1);
-        }
-        ArqLE = fopen("teste.dat", "r+b");
-        if (ArqLE == NULL) {
-            printf("Arquivo nao pode ser aberto\n");
-            exit(1);
-        }
-       
-        QuicksortExterno(&ArqLi, &ArqEi, &ArqLE, 1, 7);
-        
-        fflush(ArqLi);
-        fclose(ArqEi);
-        fclose(ArqLE);
-
-        fseek(ArqLi, 0, SEEK_SET);
-        while (fread(&aluno, sizeof(TRegistro), 1, ArqLi)) {
-            printf("aluno-%f\n", aluno.nota);
-        }
-        
-    fclose(ArqLi);
-    
-    return 0;
+    fclose(ArqEi);
+    fclose(ArqLEs);
 }

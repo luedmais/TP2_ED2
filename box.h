@@ -4,37 +4,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <time.h>
 
+// Estrutura do registro conforme colunas do PROVAO.TXT
 typedef struct {
-  long inscricao;
-  float nota;
-  char estado[3];
-  char cidade[51];
-  char curso[31];
+    long inscricao;     // Colunas 1 a 8
+    float nota;         // Colunas 10 a 14
+    char estado[3];     // Colunas 16 a 17 (+ '\0')
+    char cidade[51];    // Colunas 19 a 68 (+ '\0')
+    char curso[31];     // Colunas 70 a 99 (+ '\0')
 } TRegistro;
 
+// Estrutura para contabilização das métricas exigidas no TP2
 typedef struct {
-    int chave;
-    int ativo; // 1: ativo pode ser usado na run atual, 0: congelado (para próxima run)
-} teste;
+    long long leituras;     // Transferências: memória externa -> interna
+    long long escritas;     // Transferências: memória interna -> externa
+    long long comparacoes;  // Comparações entre valores do campo 'nota'
+} TMetricas;
 
-typedef struct {
-    int alunos;
-} Aluno;
+// Funções utilitárias de leitura e preparação dos dados
+void zeraMetricas(TMetricas *m);
+void trocaRegistros(TRegistro *a, TRegistro *b);
+bool prepararArquivoEntrada(const char *nomeTxt, const char *nomeBinSaida, int n, int situacao);
+void imprimirArquivoBinario(const char *nomeBin, int n, const char *titulo);
 
-void ler_provao(FILE *file, TRegistro TRegistros[], int n);
-
-void escrever_temp_bin(const char *nome_arquivo_txt, const char *nome_arquivo_bin, int quantidade);
-
-
-
-//void metodo1
-
-//void metodo2
-
-//void metodo3
-
-#endif //BOX_H
+#endif

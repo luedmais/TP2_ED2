@@ -1,18 +1,11 @@
-#ifndef INTERCALAF+1_H
-#define INTERCALAF+1_H
+#ifndef INTERCALAF_MAIS_1_H
+#define INTERCALAF_MAIS_1_H
 
-#include "box.h"
+#include "heap.h"
 
-//Número de fitas de entrada e saída
-#define FITAS_ENTRADA 19
-#define FITAS_SAIDA 1
+#define F_MAIS_1 19      // 19 fitas de entrada + 1 fita de saída = 20 fitas
+#define MEM_MAIS_1 19    // Memória interna máxima de 19 registros
 
-#define MAX_MEMORIA 19
+void executarIntercalacaoF1(const char *arqEntrada, const char *arqSaida, TMetricas *m);
 
-void gerar_blocos(const char *nome_arquivo_bin, int qntdItens, long *nTransferencia, long *nComparacoes);
-
-void intercalar_fitas(FILE *fitas_entrada[FITAS_ENTRADA], FILE *fita_saida, long *nTransferencia, long *nComparacoes);
-
-void intercalacao_balanceada_f1(const char *nome_arquivo_bin, int qntdItens, long *nTransferencia, long *nComparacoes);
-
-#endif INTERCALAF+1_H
+#endif
