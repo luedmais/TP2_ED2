@@ -12,7 +12,7 @@ static bool ehSentinela(const TRegistro *r) {
     return (r->inscricao == -1);
 }
 
-// Fase 1: Gera runs com seleção por substituição (memória = 19) gravando todas na fita_19.bin
+// Fase 1: Gera runs com selecao por substituicao (memoria = 19) gravando todas na fita_19.bin
 static int gerarBlocosF1(const char *arqEntrada, const char *nomeFitaSaida, TMetricas *m) {
     FILE *in = fopen(arqEntrada, "rb");
     FILE *out = fopen(nomeFitaSaida, "wb");
@@ -109,10 +109,10 @@ void executarIntercalacaoF1(const char *arqEntrada, const char *arqSaida, TMetri
     TRegistro sentinela = criarSentinela();
 
     while (numBlocos > 1) {
-        // 1. Redistribui os blocos da fita única nas 19 fitas de entrada
+        // 1. Redistribui os blocos da fita unica nas 19 fitas de entrada
         distribuirBlocosF1(fitaUnica, m);
 
-        // 2. Intercala 1 bloco de cada fita de entrada de volta para a fita única (fita_19.bin)
+        // 2. Intercala 1 bloco de cada fita de entrada de volta para a fita unica (fita_19.bin)
         FILE *fIn[F_MAIS_1];
         char nomeFita[32];
         for (int i = 0; i < F_MAIS_1; i++) {
@@ -163,7 +163,7 @@ void executarIntercalacaoF1(const char *arqEntrada, const char *arqSaida, TMetri
         numBlocos = blocosGeradosNestaPassada;
     }
 
-    // Copia o único bloco ordenado de fita_19.bin para arqSaida
+    // Copia o unico bloco ordenado de fita_19.bin para arqSaida
     FILE *fFinal = fopen(fitaUnica, "rb");
     FILE *out = fopen(arqSaida, "wb");
     if (fFinal && out) {
@@ -176,7 +176,7 @@ void executarIntercalacaoF1(const char *arqEntrada, const char *arqSaida, TMetri
     if (fFinal) fclose(fFinal);
     if (out) fclose(out);
 
-    // Remove as 20 fitas temporárias
+    // Remove as 20 fitas temporarias
     for (int i = 0; i <= F_MAIS_1; i++) {
         char nomeTmp[32];
         sprintf(nomeTmp, "fita_%d.bin", i);

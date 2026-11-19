@@ -1,5 +1,7 @@
 #include "heap.h"
 
+//arquivo dedicado a construcao e manipulacao de heaps usados no metodo de intercalcao 
+
 FilaPrioridade* criarFila(int capacidade) {
     FilaPrioridade *fila = (FilaPrioridade *)malloc(sizeof(FilaPrioridade));
     fila->capacidade = capacidade;

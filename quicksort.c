@@ -14,6 +14,8 @@ typedef struct {
     int num_cel_ocupadas;
 } TPivo;
 
+// Inicializa o pivo e a lista de celulas disponiveis
+//pivo usado para ordenacao externa
 static void inicializaPivo(TPivo *pivo) {
     pivo->num_cel_ocupadas = 0;
     pivo->Primeiro = -1;
@@ -25,6 +27,7 @@ static void inicializaPivo(TPivo *pivo) {
     }
 }
 
+// Insere o registro do pivo mantendo a ordem das notas
 static void insereItemPivo(TRegistro Item, TPivo *pivo, TMetricas *m) {
     if (pivo->num_cel_ocupadas == TAM_PIVO) return;
 
@@ -76,6 +79,7 @@ static void insereItemPivo(TRegistro Item, TPivo *pivo, TMetricas *m) {
     pivo->Itens[indiceInsercao].Ant = disp;
 }
 
+// Retira o registro de menor nota do pivo
 static void retiraPrimeiroPivo(TPivo *pivo, TRegistro *Item) {
     if (pivo->num_cel_ocupadas == 0) return;
 
@@ -95,6 +99,7 @@ static void retiraPrimeiroPivo(TPivo *pivo, TRegistro *Item) {
     pivo->num_cel_ocupadas--;
 }
 
+// Retira o registro de maior nota do pivo
 static void retiraUltimoPivo(TPivo *pivo, TRegistro *Item) {
     if (pivo->num_cel_ocupadas == 0) return;
 
@@ -114,6 +119,7 @@ static void retiraUltimoPivo(TPivo *pivo, TRegistro *Item) {
     pivo->num_cel_ocupadas--;
 }
 
+// Le um registro pela parte superior do arquivo
 static void leSup(FILE *ArqLEs, TRegistro *UltLido, int *Ls, bool *OndeLer, TMetricas *m) {
     fseek(ArqLEs, (long)(*Ls - 1) * sizeof(TRegistro), SEEK_SET);
     fread(UltLido, sizeof(TRegistro), 1, ArqLEs);
@@ -122,6 +128,7 @@ static void leSup(FILE *ArqLEs, TRegistro *UltLido, int *Ls, bool *OndeLer, TMet
     *OndeLer = false;
 }
 
+// Le um registro pela parte inferior do arquivo
 static void leInf(FILE *ArqLi, TRegistro *UltLido, int *Li, bool *OndeLer, TMetricas *m) {
     fread(UltLido, sizeof(TRegistro), 1, ArqLi);
     m->leituras++;
@@ -129,6 +136,7 @@ static void leInf(FILE *ArqLi, TRegistro *UltLido, int *Li, bool *OndeLer, TMetr
     *OndeLer = true;
 }
 
+// Escreve um registro pela parte superior do arquivo
 static void escreveMax(FILE *ArqLEs, TRegistro R, int *Es, TMetricas *m) {
     fseek(ArqLEs, (long)(*Es - 1) * sizeof(TRegistro), SEEK_SET);
     fwrite(&R, sizeof(TRegistro), 1, ArqLEs);
@@ -136,12 +144,14 @@ static void escreveMax(FILE *ArqLEs, TRegistro R, int *Es, TMetricas *m) {
     (*Es)--;
 }
 
+// Escreve um registro pela parte inferior do arquivo
 static void escreveMin(FILE *ArqEi, TRegistro R, int *Ei, TMetricas *m) {
     fwrite(&R, sizeof(TRegistro), 1, ArqEi);
     m->escritas++;
     (*Ei)++;
 }
 
+// Divide o arquivo em partes menores e maiores
 static void particao(FILE *ArqLi, FILE *ArqEi, FILE *ArqLEs, int Esq, int Dir, int *i, int *j, TMetricas *m) {
     int Ls = Dir, Es = Dir;
     int Li = Esq, Ei = Esq;
@@ -212,6 +222,7 @@ static void particao(FILE *ArqLi, FILE *ArqEi, FILE *ArqLEs, int Esq, int Dir, i
     }
 }
 
+// Ordena recursivamente as partes do arquivo
 static void quicksortRec(FILE *ArqLi, FILE *ArqEi, FILE *ArqLEs, int Esq, int Dir, TMetricas *m) {
     if (Dir - Esq < 1) return;
 
@@ -227,6 +238,7 @@ static void quicksortRec(FILE *ArqLi, FILE *ArqEi, FILE *ArqLEs, int Esq, int Di
     }
 }
 
+// Abre o arquivo e inicia o quicksort externo
 void executarQuicksortExterno(const char *nomeArquivoBin, int n, TMetricas *metricas) {
     FILE *ArqLi = fopen(nomeArquivoBin, "r+b");
     FILE *ArqEi = fopen(nomeArquivoBin, "r+b");

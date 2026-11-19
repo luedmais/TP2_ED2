@@ -1,5 +1,7 @@
 #include "box.h"
 
+//arquivo usado para funcoes auxiliares dentro do pre processamento e da funcao main
+
 void zeraMetricas(TMetricas *m) {
     m->leituras = 0;
     m->escritas = 0;
@@ -19,25 +21,25 @@ static bool parseLinhaProvao(const char *linha, TRegistro *reg) {
     char bufInsc[9];
     char bufNota[6];
 
-    // Colunas 1 a 8 (índices 0..7)
+    // Colunas 1 a 8 (indices 0..7)
     strncpy(bufInsc, linha, 8);
     bufInsc[8] = '\0';
     reg->inscricao = strtol(bufInsc, NULL, 10);
 
-    // Colunas 10 a 14 (índices 9..13)
+    // Colunas 10 a 14 (indices 9..13)
     strncpy(bufNota, linha + 9, 5);
     bufNota[5] = '\0';
     reg->nota = strtof(bufNota, NULL);
 
-    // Colunas 16 e 17 (índices 15..16)
+    // Colunas 16 e 17 (indices 15..16)
     strncpy(reg->estado, linha + 15, 2);
     reg->estado[2] = '\0';
 
-    // Colunas 19 a 68 (índices 18..67)
+    // Colunas 19 a 68 (indices 18..67)
     strncpy(reg->cidade, linha + 18, 50);
     reg->cidade[50] = '\0';
 
-    // Colunas 70 a 99 (índices 69..98) - trata quebra de linha se a linha for mais curta
+    // Colunas 70 a 99 (indices 69..98) - trata quebra de linha se a linha for mais curta
     size_t len = strlen(linha);
     size_t maxCurso = (len > 69) ? (len - 69) : 0;
     if (maxCurso > 30) maxCurso = 30;
@@ -54,7 +56,7 @@ static bool parseLinhaProvao(const char *linha, TRegistro *reg) {
     return true;
 }
 
-// Comparadores auxiliares para preparar as situações 1 e 2 no pré-processamento
+// Comparadores auxiliares para preparar as situaces 1 e 2 no pre-processamento
 static int cmpAsc(const void *a, const void *b) {
     float na = ((const TRegistro *)a)->nota;
     float nb = ((const TRegistro *)b)->nota;
@@ -71,7 +73,7 @@ static int cmpDesc(const void *a, const void *b) {
     return 0;
 }
 
-// Lê os n primeiros registros de PROVAO.TXT, aplica a situação (1, 2 ou 3) e grava em nomeBinSaida
+// Le os n primeiros registros de PROVAO.TXT, aplica a situacao (1, 2 ou 3) e grava em nomeBinSaida
 bool prepararArquivoEntrada(const char *nomeTxt, const char *nomeBinSaida, int n, int situacao) {
     FILE *arqTxt = fopen(nomeTxt, "r");
     if (!arqTxt) {
@@ -101,13 +103,13 @@ bool prepararArquivoEntrada(const char *nomeTxt, const char *nomeBinSaida, int n
         return false;
     }
 
-    // Ordena previamente conforme a situação escolhida (não contabilizado no método externo)
+    // Ordena previamente conforme a situacao escolhida
     if (situacao == 1) {
         qsort(buffer, n, sizeof(TRegistro), cmpAsc);
     } else if (situacao == 2) {
         qsort(buffer, n, sizeof(TRegistro), cmpDesc);
     }
-    // situacao == 3 mantém a ordem original aleatória
+    // situacao == 3 mantem a ordem original aleatoria
 
     FILE *arqBin = fopen(nomeBinSaida, "wb");
     if (!arqBin) {

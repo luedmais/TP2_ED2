@@ -12,7 +12,7 @@ static bool ehSentinela(const TRegistro *r) {
     return (r->inscricao == -1);
 }
 
-// Fase 1: Gera runs com seleção por substituição (memória = 10) e distribui nas fitas 0..9
+// Fase 1: Gera runs com selecao por substituicao (memoria = 10) e distribui nas fitas 0..9
 static int gerarBlocos2f(const char *arqEntrada, TMetricas *m) {
     FILE *in = fopen(arqEntrada, "rb");
     if (!in) return 0;
@@ -44,7 +44,7 @@ static int gerarBlocos2f(const char *arqEntrada, TMetricas *m) {
 
     while (heap->tamanho > 0) {
         if (heap->itens[0].ativo == 0) {
-            // Fim do bloco atual: grava sentinela e avança para a próxima fita
+            // Fim do bloco atual: grava sentinela e avança para a proxima fita
             fwrite(&sentinela, sizeof(TRegistro), 1, fitas[fitaAtual]);
             m->escritas++;
             totalBlocos++;
@@ -71,7 +71,7 @@ static int gerarBlocos2f(const char *arqEntrada, TMetricas *m) {
         }
     }
 
-    // Fecha o último bloco ativo
+    // Fecha o ultimo bloco ativo
     if (totalBlocos > 0 || ultimoEscrito >= 0.0f) {
         fwrite(&sentinela, sizeof(TRegistro), 1, fitas[fitaAtual]);
         m->escritas++;
@@ -92,7 +92,7 @@ void executarIntercalacao2f(const char *arqEntrada, const char *arqSaida, TMetri
     int baseSaida = F_2F;  // Fitas 10..19
     TRegistro sentinela = criarSentinela();
 
-    // Fase 2: Intercalação balanceada de 10 caminhos até restar 1 único bloco
+    // Fase 2: Intercalacao balanceada de 10 caminhos ate restar 1 unico bloco
     while (numBlocos > 1) {
         FILE *fIn[F_2F], *fOut[F_2F];
         char nomeFita[32];
@@ -109,7 +109,7 @@ void executarIntercalacao2f(const char *arqEntrada, const char *arqSaida, TMetri
         int fitaDestino = 0;
 
         while (1) {
-            // Carrega 1 registro do próximo bloco disponível de cada fita de entrada
+            // Carrega 1 registro do proximo bloco disponivel de cada fita de entrada
             for (int i = 0; i < F_2F; i++) {
                 TRegistro r;
                 if (fread(&r, sizeof(TRegistro), 1, fIn[i]) == 1) {
@@ -138,7 +138,7 @@ void executarIntercalacao2f(const char *arqEntrada, const char *arqSaida, TMetri
                 }
             }
 
-            // Encerra o bloco intercalado na fita de saída atual
+            // Encerra o bloco intercalado na fita de saida atual
             fwrite(&sentinela, sizeof(TRegistro), 1, fOut[fitaDestino]);
             m->escritas++;
             blocosGeradosNestaPassada++;
@@ -152,13 +152,13 @@ void executarIntercalacao2f(const char *arqEntrada, const char *arqSaida, TMetri
         }
 
         numBlocos = blocosGeradosNestaPassada;
-        // Inverte papéis: fitas de saída tornam-se entrada na próxima passada
+        //fitas de saida tornam-se entrada na proxima passada
         int tmp = baseEntrada;
         baseEntrada = baseSaida;
         baseSaida = tmp;
     }
 
-    // Copia o único bloco final (localizado no início de baseEntrada + 0) para arqSaida
+    //Copia o unico bloco final (localizado no inicio de baseEntrada + 0) para arqSaida
     char nomeFitaFinal[32];
     sprintf(nomeFitaFinal, "fita_%d.bin", baseEntrada);
     FILE *fFinal = fopen(nomeFitaFinal, "rb");
@@ -173,7 +173,7 @@ void executarIntercalacao2f(const char *arqEntrada, const char *arqSaida, TMetri
     if (fFinal) fclose(fFinal);
     if (out) fclose(out);
 
-    // Limpa fitas temporárias
+    // Limpa fitas temporarias
     for (int i = 0; i < 2 * F_2F; i++) {
         char nomeTmp[32];
         sprintf(nomeTmp, "fita_%d.bin", i);

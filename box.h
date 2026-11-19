@@ -17,14 +17,14 @@ typedef struct {
     char curso[31];     // Colunas 70 a 99 (+ '\0')
 } TRegistro;
 
-// Estrutura para contabilização das métricas exigidas no TP2
+// Estrutura para contabilizacao das metricas
 typedef struct {
     long long leituras;     // Transferências: memória externa -> interna
     long long escritas;     // Transferências: memória interna -> externa
-    long long comparacoes;  // Comparações entre valores do campo 'nota'
+    long long comparacoes;  // Comparacoes entre valores do campo 'nota'
 } TMetricas;
 
-// Funções utilitárias de leitura e preparação dos dados
+// Funcoes de leitura e preparacao dos dados (auxiliares)
 void zeraMetricas(TMetricas *m);
 void trocaRegistros(TRegistro *a, TRegistro *b);
 bool prepararArquivoEntrada(const char *nomeTxt, const char *nomeBinSaida, int n, int situacao);

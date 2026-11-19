@@ -5,8 +5,8 @@
 
 typedef struct {
     TRegistro reg;
-    int ativo;       // 1 = ativo na run atual, 0 = congelado (seleção por substituição)
-    int fitaOrigem;  // Índice da fita de onde o registro foi lido (usado na intercalação)
+    int ativo;       // 1 = ativo na run atual, 0 = congelado (selecao por substituicao)
+    int fitaOrigem;  // indice da fita de onde o registro foi lido (usado na intercalacao)
 } HeapItem;
 
 typedef struct {
